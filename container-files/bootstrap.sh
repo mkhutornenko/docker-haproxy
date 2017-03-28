@@ -10,7 +10,7 @@ HAPROXY_USER_PARAMS=$@
 HAPROXY_PID_FILE="/var/run/haproxy.pid"
 HAPROXY_CMD="/usr/local/sbin/haproxy -f ${HAPROXY_CONFIG} ${HAPROXY_USER_PARAMS} -D -p ${HAPROXY_PID_FILE}"
 HAPROXY_CHECK_CONFIG_CMD="/usr/local/sbin/haproxy -f ${HAPROXY_CONFIG} -c"
-
+RSYSLOG_CMD="/usr/sbin/rsyslogd"
 
 #######################################
 # Echo/log function
@@ -40,6 +40,7 @@ print_config() {
 grep --silent -e "web.server" /etc/hosts || echo "127.0.0.1 web.server" >> /etc/hosts
 
 log $HAPROXY_CMD && print_config
+$RSYSLOG_CMD
 $HAPROXY_CHECK_CONFIG_CMD
 $HAPROXY_CMD
 # Exit immidiately in case of any errors or when we have interactive terminal
@@ -52,6 +53,7 @@ log "HAProxy started with $HAPROXY_CONFIG config, pid $(cat $HAPROXY_PID_FILE)."
 while inotifywait -q -e create,delete,modify,attrib $HAPROXY_CONFIG /etc/hosts; do
   if [ -f $HAPROXY_PID_FILE ]; then
     log "Restarting HAProxy due to config changes..." && print_config
+    $RSYSLOG_CMD
     $HAPROXY_CHECK_CONFIG_CMD
     $HAPROXY_CMD -sf $(cat $HAPROXY_PID_FILE)
     log "HAProxy restarted, pid $(cat $HAPROXY_PID_FILE)." && log

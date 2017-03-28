@@ -41,6 +41,12 @@ RUN \
   openssl x509 -req -days 3650 -in /etc/ssl/dummy.csr -signkey /etc/ssl/dummy.key -out /etc/ssl/dummy.crt && \
   cat /etc/ssl/dummy.crt /etc/ssl/dummy.key > /etc/ssl/dummy.pem && \
 
+  `# Install and configure rsyslog...` \
+  yum install -y rsyslog && \
+  sed -i 's/#\$ModLoad imudp/\$ModLoad imudp/g' /etc/rsyslog.conf && \
+  sed -i 's/#\$UDPServerRun 514/\$UDPServerRun 514/g' /etc/rsyslog.conf && \
+  echo "local2.* /var/log/haproxy.log" > /etc/rsyslog.d/haproxy.conf && \
+
   `# Clean up: build tools...` \
   yum remove -y make gcc pcre-devel && \
   yum clean all
